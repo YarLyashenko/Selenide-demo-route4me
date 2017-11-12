@@ -1,5 +1,7 @@
 package route4me.pages;
 
+import org.openqa.selenium.By;
+
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.page;
 
@@ -18,5 +20,10 @@ public class WeatherNotificationPanel {
     public VerifyAddressPanel clickCancel() {
         $("div.modal-footer button[data-bb-handler=cancel]").click();
         return page(VerifyAddressPanel.class);
+    }
+
+    public boolean isWeatherPanelVisible() {
+        return $(By.xpath("//h4[contains(@class, 'modal-title') and contains(text(), 'Weather Notification')]"))
+                .isDisplayed();
     }
 }

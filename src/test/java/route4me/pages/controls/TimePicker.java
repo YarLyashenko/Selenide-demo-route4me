@@ -18,25 +18,46 @@ public class TimePicker {
     private SelenideElement minuteHandle;
 
     public void setTime(String time) {
-        setMinutesWithSlider(getMinutes(time));
+        int size = $("div.ui-timepicker-div div.ui-slider ").getSize().getWidth();
 
-        actions().dragAndDropBy(hourHandle, -2000, 0).perform();
-        for (int i = 0; i < 2000; i++) {
-            if (time.equals(pickedTime.getText())) {
-                break;
-            }
-            actions().dragAndDropBy(hourHandle, 4, 0).perform();
-        }
+        setMinutesWithSlider(time, size);
+        setHoursWithSlider(time, size);
+
         $("button.ui-datepicker-close").click();
     }
 
-    private void setMinutesWithSlider(String expectedMinutes) {
-        actions().dragAndDropBy(minuteHandle, -2000, 0).perform();
-        for (int i = 0; i < 2000; i++) {
-            if (expectedMinutes.equals(getMinutes(pickedTime.getText()))) {
+    private void setMinutesWithSlider(String time, int size) {
+        actions().dragAndDropBy(minuteHandle, -size * 2, 0).perform();
+        String previousTime;
+        int minutesStep = size / 60;
+
+        for (int i = 0; i < 70; i++) {
+            if (getMinutes(time).equals(getMinutes(pickedTime.getText()))) {
                 return;
             }
-            actions().dragAndDropBy(minuteHandle, 4, 0).perform();
+            previousTime = pickedTime.getText();
+            actions().dragAndDropBy(minuteHandle, minutesStep, 0).perform();
+            if (previousTime.equals(pickedTime.getText())) {
+                minutesStep++;
+            }
+        }
+    }
+
+    private void setHoursWithSlider(String time, int size) {
+        actions().dragAndDropBy(hourHandle, -size * 2, 0).perform();
+        String previousTime;
+        int hourStep = size / 24;
+
+        actions().dragAndDropBy(hourHandle, -size * 2, 0).perform();
+        for (int i = 0; i < 30; i++) {
+            if (time.equals(pickedTime.getText())) {
+                break;
+            }
+            previousTime = pickedTime.getText();
+            actions().dragAndDropBy(hourHandle, hourStep, 0).perform();
+            if (previousTime.equals(pickedTime.getText())) {
+                hourStep++;
+            }
         }
     }
 

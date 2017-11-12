@@ -31,4 +31,8 @@ public class VerifyAddressPanel {
         element.find(By.cssSelector("a.address-text-edit-toggler")).hover().click();
         element.find(By.cssSelector("button.ok-button")).click();
     }
+
+    public void waitUntilLoadingMessageDisappears() {
+        $("div.blockUI.blockMsg.blockElement").shouldBe(hidden);
+    }
 }

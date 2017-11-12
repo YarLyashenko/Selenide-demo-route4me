@@ -1,15 +1,17 @@
 package route4me;
 
 import com.codeborne.selenide.Configuration;
-import com.codeborne.selenide.testng.ScreenShooter;
+import com.google.common.collect.Ordering;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 import route4me.pages.*;
 import route4me.pages.routeCreator.RouteCreatorPanel;
 import route4me.pages.routeCreator.tabs.ScheduleTab;
 
 import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.codeborne.selenide.CollectionCondition.size;
 import static com.codeborne.selenide.Selenide.open;
@@ -17,9 +19,9 @@ import static com.codeborne.selenide.Selenide.page;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.time.LocalDateTime.now;
+import static java.util.stream.Collectors.toList;
 import static route4me.pages.LoginPage.LOGIN_PAGE_ADDRESS;
 
-@Listeners({ScreenShooter.class})
 public class AddRouteTest {
 
     private static final String SCHEDULE_DATE = "20 January 2018";
@@ -77,13 +79,30 @@ public class AddRouteTest {
         VerifyAddressPanel verifyAddressPanel = page(VerifyAddressPanel.class);
         verifyAddressPanel.openReviewTab().confirmAllAddresses();
         verifyAddressPanel.finishImport();
+        verifyAddressPanel.waitUntilLoadingMessageDisappears();
 
         WeatherNotificationPanel weatherPanel = page(WeatherNotificationPanel.class);
-        weatherPanel.clickSkip();
+        if (weatherPanel.isWeatherPanelVisible()) {
+            weatherPanel.clickSkip();
+        }
 
         RouteDetailsPage routeDetails = page(RouteDetailsPage.class);
         routeDetails.waitForRouteDetailsPageLoad();
         routeDetails.getRouteStops().shouldHave(size(STOPS_AT_THE_ROUTE));
-        routeDetails.getRouteStops().forEach(stop -> stop.click());
+
+        //Check order. Should be as in the file: Customer Name 1 - 2 - 3 - 4
+        Assert.assertTrue(Ordering.natural().isOrdered(
+                routeDetails.getRouteStops().stream()
+                        .map(e -> getCustomerNameNumber(e.text())).collect(toList())),
+                "Route stops are not in the natural order, as in the input file.");
+    }
+
+    private int getCustomerNameNumber(String name) {
+        Pattern pattern = Pattern.compile("Customer Name (\\d+?)");
+        Matcher matcher = pattern.matcher(name);
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(1));
+        }
+        return 0;
     }
 }
